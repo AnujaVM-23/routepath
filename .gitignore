@@ -21,6 +21,9 @@ dist/
 Thumbs.db
 desktop.ini
 
+# Nested repos
+Routemaster/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
