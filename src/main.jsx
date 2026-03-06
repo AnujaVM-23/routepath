@@ -1,5 +1,6 @@
 // PURPOSE: React application entry point
-// LAYER: Bootstrap — mounts App into DOM
+// LAYER: Bootstrap — mounts App into the #root DOM element
+// StrictMode enables additional development warnings
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';

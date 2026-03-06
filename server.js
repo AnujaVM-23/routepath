@@ -1,5 +1,7 @@
 // PURPOSE: Express backend for path history storage
 // LAYER: Backend API — in-memory session store
+// Serves the built React frontend (dist/) in production
+// API endpoints: POST/GET/DELETE /api/history
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -9,12 +11,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001; // Render injects PORT env variable in production
 
-app.use(cors());
-app.use(express.json());
+app.use(cors());                // Allow cross-origin requests (dev mode)
+app.use(express.json());        // Parse JSON request bodies
 
-// In-memory history store
+// In-memory history store (resets on server restart)
 let history = [];
 let nextId = 1;
 
@@ -53,8 +55,10 @@ app.delete('/api/history', (_req, res) => {
   res.json({ message: 'History cleared.' });
 });
 
-// Serve built frontend in production
+// Serve built React frontend (Vite output) in production
+// This must come after API routes so /api/* is handled first
 app.use(express.static(path.join(__dirname, 'dist')));
+// Fallback: serve index.html for all non-API routes (SPA client-side routing)
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });

@@ -1,5 +1,8 @@
 // PURPOSE: State management and component orchestration
 // LAYER: App Orchestration — no algorithm logic inline
+// NAVIGATION FLOW: dashboard → input → loading → grid → result
+//                  dashboard → history
+// Back navigation is supported on every page except dashboard (root) and loading (transient)
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { bfs } from './algorithms/bfs.js';
 import { validateInput, findTarget, buildOutput, generateExplanation } from './utils/pathHelpers.js';
@@ -12,33 +15,38 @@ import Dashboard from './components/Dashboard.jsx';
 const API_BASE = '/api';
 
 export default function App() {
-  // Page: 'dashboard' | 'input' | 'loading' | 'grid' | 'result' | 'history'
+  // ── STATE ──
+  // Page controls which full-screen view is rendered
+  // 'dashboard' | 'input' | 'loading' | 'grid' | 'result' | 'history'
   const [page, setPage] = useState('dashboard');
 
-  const [inputError, setInputError] = useState(null);
-  const [validationMsg, setValidationMsg] = useState(null);
-  const [result, setResult] = useState(null);
-  const [grid, setGrid] = useState(null);
-  const [start, setStart] = useState(null);
-  const [target, setTarget] = useState(null);
-  const [path, setPath] = useState(null);
-  const [exploredCells, setExploredCells] = useState(null);
-  const [phase, setPhase] = useState('idle');
-  const [explorationStep, setExplorationStep] = useState(0);
-  const [pathStep, setPathStep] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [explanation, setExplanation] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [inputError, setInputError] = useState(null);       // Validation error shown on input page
+  const [validationMsg, setValidationMsg] = useState(null);  // Validate JSON feedback message
+  const [result, setResult] = useState(null);                // BFS output object
+  const [grid, setGrid] = useState(null);                    // Parsed 2D grid array
+  const [start, setStart] = useState(null);                  // Start [row, col]
+  const [target, setTarget] = useState(null);                // Target [row, col]
+  const [path, setPath] = useState(null);                    // BFS shortest path
+  const [exploredCells, setExploredCells] = useState(null);  // All cells BFS visited
+  const [phase, setPhase] = useState('idle');                // Animation phase: idle | exploring | pathing | done
+  const [explorationStep, setExplorationStep] = useState(0); // Current step in exploration animation
+  const [pathStep, setPathStep] = useState(0);               // Current step in path animation
+  const [isRunning, setIsRunning] = useState(false);         // Locks UI while BFS is computing
+  const [explanation, setExplanation] = useState(null);      // Natural language path explanation
+  const [history, setHistory] = useState([]);                // Array of past run entries
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Refs hold exploration/path data for animation intervals (avoids stale closures)
   const exploredRef = useRef(null);
   const pathRef = useRef(null);
 
-  // Fetch history on mount
+  // ── API CALLS ──
+  // Fetch run history from Express backend on initial mount
   useEffect(() => {
     fetchHistory();
   }, []);
 
+  // Fetch all history entries from the backend API
   const fetchHistory = async () => {
     setHistoryLoading(true);
     try {
@@ -54,6 +62,7 @@ export default function App() {
     }
   };
 
+  // Save a completed run to the backend history store
   const saveToHistory = async (parsedGrid, parsedStart, parsedTarget, output) => {
     try {
       const res = await fetch(`${API_BASE}/history`, {
@@ -76,6 +85,7 @@ export default function App() {
     }
   };
 
+  // Delete all history entries from the backend
   const clearHistory = async () => {
     try {
       const res = await fetch(`${API_BASE}/history`, { method: 'DELETE' });
@@ -87,6 +97,8 @@ export default function App() {
     }
   };
 
+  // ── NAVIGATION HANDLERS ──
+  // Validate JSON without running BFS (preview check)
   const handleValidate = useCallback((jsonString) => {
     const validation = validateInput(jsonString);
     if (validation.valid) {
@@ -96,11 +108,14 @@ export default function App() {
     }
   }, []);
 
+  // Navigate to history page and refresh data
   const handleNavigateHistory = useCallback(() => {
     fetchHistory();
     setPage('history');
   }, []);
 
+  // ── CORE SUBMIT HANDLER ──
+  // Validates input → runs BFS → transitions through loading → grid → saves to history
   const handleSubmit = useCallback((jsonString) => {
     // Reset
     setInputError(null);
@@ -176,6 +191,8 @@ export default function App() {
     }, 100);
   }, []);
 
+  // ── BACK NAVIGATION HANDLERS ──
+  // Go back from grid/result to the input page
   const handleBackToInput = () => {
     setPage('input');
     setPhase('idle');
@@ -183,6 +200,7 @@ export default function App() {
     setPathStep(0);
   };
 
+  // Go back to dashboard from any page (resets animation state)
   const handleBackToDashboard = () => {
     setPage('dashboard');
     setPhase('idle');
@@ -191,6 +209,7 @@ export default function App() {
     fetchHistory();
   };
 
+  // Dashboard quick-action navigation (input or history)
   const handleDashboardNavigate = (target) => {
     if (target === 'history') {
       fetchHistory();
@@ -198,8 +217,14 @@ export default function App() {
     setPage(target);
   };
 
+  // Navigate forward from grid page to result page
   const handleShowResult = () => {
     setPage('result');
+  };
+
+  // Navigate back from result page to grid visualization
+  const handleBackToGrid = () => {
+    setPage('grid');
   };
 
   const handleDownloadJson = () => {
@@ -214,7 +239,8 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Animation controller
+  // ── ANIMATION CONTROLLER ──
+  // Runs exploration animation (40ms per cell), then path animation (120ms per step)
   useEffect(() => {
     if (phase === 'exploring') {
       const explored = exploredRef.current;
@@ -312,7 +338,28 @@ export default function App() {
                 e.currentTarget.style.color = '#9ca3af';
               }}
             >
-              ← Back to Input
+              ← Dashboard
+            </button>
+            {/* Back to Input shortcut */}
+            <button
+              onClick={handleBackToInput}
+              className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors duration-150"
+              style={{
+                backgroundColor: '#1f2937',
+                color: '#9ca3af',
+                border: '1px solid #374151',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#374151';
+                e.currentTarget.style.color = '#f9fafb';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#1f2937';
+                e.currentTarget.style.color = '#9ca3af';
+              }}
+            >
+              ← Input
             </button>
             <div className="flex items-center gap-2">
               <span className="text-xl">🏭</span>
@@ -414,8 +461,9 @@ export default function App() {
           style={{ height: '64px', borderBottom: '1px solid #1f2937' }}
         >
           <div className="flex items-center gap-3">
+            {/* Back to Input button */}
             <button
-              onClick={handleBackToDashboard}
+              onClick={handleBackToInput}
               className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors duration-150"
               style={{
                 backgroundColor: '#1f2937',
@@ -432,7 +480,7 @@ export default function App() {
                 e.currentTarget.style.color = '#9ca3af';
               }}
             >
-              ← Back
+              ← Back to Input
             </button>
             <div className="flex items-center gap-2">
               <span className="text-xl">🏭</span>
@@ -556,6 +604,7 @@ export default function App() {
       result={result}
       explanation={explanation}
       onSolveAnother={handleBackToDashboard}
+      onBackToGrid={handleBackToGrid}
     />
   );
 }

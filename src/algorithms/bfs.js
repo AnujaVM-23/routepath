@@ -1,5 +1,8 @@
 // PURPOSE: BFS pathfinding — pure JS only
 // LAYER: Algorithm — zero React, zero UI imports
+// BFS guarantees shortest path in an unweighted grid
+// Time complexity: O(V+E) where V = cells, E = edges
+// Space complexity: O(V)
 
 /**
  * Breadth-First Search on a 2D grid.
@@ -11,10 +14,10 @@
 export function bfs(grid, start, target) {
   const rows = grid.length;
   const cols = grid[0].length;
-  const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-  const queue = [[start]];
-  const visited = new Set();
-  const exploredCells = [];
+  const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]; // up, down, left, right
+  const queue = [[start]];       // Queue of paths (each path is an array of [row,col])
+  const visited = new Set();     // Track visited cells to avoid cycles
+  const exploredCells = [];      // Record exploration order for animation
   visited.add(`${start[0]},${start[1]}`);
 
   while (queue.length > 0) {

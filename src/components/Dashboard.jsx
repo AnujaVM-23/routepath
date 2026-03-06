@@ -1,7 +1,8 @@
 // PURPOSE: Professional dashboard — landing page with stats, quick actions, recent activity
 // LAYER: UI Component — display + navigation
+// This is the root page of the app. Users arrive here first.
 export default function Dashboard({ history, onNavigate }) {
-  // Compute stats from history
+  // ── Compute aggregate stats from history array ──
   const totalRuns = history.length;
   const successRuns = history.filter((h) => h.targetReached).length;
   const failedRuns = totalRuns - successRuns;

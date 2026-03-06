@@ -1,5 +1,6 @@
 /* PURPOSE: Global styles, Tailwind directives, custom animations */
 /* LAYER: Styling */
+/* Dark theme with navy #0a0f1e background, Inter body font, JetBrains Mono for code */
 
 @tailwind base;
 @tailwind components;

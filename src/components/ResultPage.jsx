@@ -1,7 +1,12 @@
 // PURPOSE: Full-page route output with formatted JSON, copy, download, solve another
 // LAYER: UI Component — display only
+// BACK NAV: ← Back to Grid (onBackToGrid)
 import { useState } from 'react';
 
+/**
+ * Syntax-highlights a JSON object with colored spans.
+ * Keys = cyan, strings = indigo, numbers = amber, booleans = green/red, null = pink.
+ */
 function syntaxHighlight(obj) {
   const json = JSON.stringify(obj, null, 2);
   const parts = [];
@@ -63,6 +68,9 @@ function syntaxHighlight(obj) {
   return parts;
 }
 
+/**
+ * Returns arrow and label for the direction between two adjacent cells.
+ */
 function getDirection(from, to) {
   const dr = to[0] - from[0];
   const dc = to[1] - from[1];
@@ -73,13 +81,14 @@ function getDirection(from, to) {
   return { arrow: '·', label: '' };
 }
 
-export default function ResultPage({ result, explanation, onSolveAnother }) {
+export default function ResultPage({ result, explanation, onSolveAnother, onBackToGrid }) {
   const [copied, setCopied] = useState(false);
 
   if (!result) return null;
 
   const jsonText = JSON.stringify(result, null, 2);
 
+  // Copy formatted JSON to clipboard
   const handleCopy = () => {
     navigator.clipboard.writeText(jsonText).then(() => {
       setCopied(true);
@@ -87,6 +96,7 @@ export default function ResultPage({ result, explanation, onSolveAnother }) {
     });
   };
 
+  // Download output as a .json file
   const handleDownload = () => {
     const blob = new Blob([jsonText], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -97,6 +107,7 @@ export default function ResultPage({ result, explanation, onSolveAnother }) {
     URL.revokeObjectURL(url);
   };
 
+  // Build step-by-step path breakdown for display
   const steps = [];
   if (result.path && result.path.length > 1) {
     for (let i = 1; i < result.path.length; i++) {
@@ -112,23 +123,46 @@ export default function ResultPage({ result, explanation, onSolveAnother }) {
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: '#0a0f1e' }}
     >
-      {/* Header */}
+      {/* Header with back navigation */}
       <header
         className="flex items-center justify-between px-6 shrink-0"
         style={{ height: '64px', borderBottom: '1px solid #1f2937' }}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🏭</span>
-          <span
-            className="text-lg font-bold"
+        <div className="flex items-center gap-3">
+          {/* Back to Grid button */}
+          <button
+            onClick={onBackToGrid}
+            className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors duration-150"
             style={{
-              background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              backgroundColor: '#1f2937',
+              color: '#9ca3af',
+              border: '1px solid #374151',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#374151';
+              e.currentTarget.style.color = '#f9fafb';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#1f2937';
+              e.currentTarget.style.color = '#9ca3af';
             }}
           >
-            RouteMaster
-          </span>
+            ← Back to Grid
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🏭</span>
+            <span
+              className="text-lg font-bold"
+              style={{
+                background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              RouteMaster
+            </span>
+          </div>
         </div>
         <h2 className="text-lg font-semibold" style={{ color: '#f9fafb' }}>
           📤 Route Output

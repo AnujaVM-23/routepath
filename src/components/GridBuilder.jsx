@@ -1,7 +1,10 @@
 // PURPOSE: Visual grid builder — click cells to set obstacles, start, and target
 // LAYER: UI Component — produces JSON string for submission
+// Users can paint cells with brushes: Walkable(0), Obstacle(1), Item(2), Start
+// Only 1 item (value 2) is allowed at a time
 import { useState, useCallback } from 'react';
 
+// Cell type visual config: color, border, emoji for each grid value
 const CELL_TYPES = {
   0: { label: 'Walkable', color: '#1f2937', border: '#374151', emoji: '' },
   1: { label: 'Obstacle', color: '#7f1d1d', border: '#ef4444', emoji: '🧱' },
@@ -10,17 +13,19 @@ const CELL_TYPES = {
 };
 
 export default function GridBuilder({ onGenerate }) {
-  const [rows, setRows] = useState(3);
-  const [cols, setCols] = useState(3);
-  const [grid, setGrid] = useState(() => makeGrid(3, 3));
-  const [startCell, setStartCell] = useState([0, 0]);
-  const [brush, setBrush] = useState(1); // current paint brush: 0, 1, or 2
-  const [generated, setGenerated] = useState(false);
+  const [rows, setRows] = useState(3);                          // Grid row count
+  const [cols, setCols] = useState(3);                           // Grid column count
+  const [grid, setGrid] = useState(() => makeGrid(3, 3));        // 2D array of cell values
+  const [startCell, setStartCell] = useState([0, 0]);            // Start position [row, col]
+  const [brush, setBrush] = useState(1);                         // Active paint brush: 0, 1, 2, or 'start'
+  const [generated, setGenerated] = useState(false);             // True after JSON is generated
 
+  // Create a fresh grid filled with walkable cells (0)
   function makeGrid(r, c) {
     return Array.from({ length: r }, () => Array(c).fill(0));
   }
 
+  // Apply new row/col dimensions, reset grid and start position
   const applyDimensions = useCallback(() => {
     const r = Math.max(1, Math.min(rows, 20));
     const c = Math.max(1, Math.min(cols, 20));
@@ -31,6 +36,9 @@ export default function GridBuilder({ onGenerate }) {
     setGenerated(false);
   }, [rows, cols]);
 
+  // Handle cell click — applies current brush to the clicked cell
+  // Toggling: clicking same value reverts to walkable
+  // Item placement: auto-clears previous item (only 1 allowed)
   const handleCellClick = (r, c) => {
     // If clicking the start cell, don't overwrite
     if (startCell && startCell[0] === r && startCell[1] === c) return;
@@ -66,11 +74,13 @@ export default function GridBuilder({ onGenerate }) {
     setGenerated(false);
   };
 
+  // Determine what to display for a cell (accounts for start position overlay)
   const getCellDisplay = (r, c) => {
     if (startCell && startCell[0] === r && startCell[1] === c) return 'start';
     return grid[r][c];
   };
 
+  // Generate JSON string from the current grid state and pass to parent
   const handleGenerate = () => {
     // Find all targets
     const targets = [];

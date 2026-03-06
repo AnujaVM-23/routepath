@@ -1,8 +1,11 @@
 // PURPOSE: Full-page JSON input interface with format reference + visual grid builder
 // LAYER: UI Component — no algorithm logic
+// TABS: JSON Input | Upload JSON | Visual Grid Builder
+// BACK NAV: ← Dashboard (onNavigateDashboard)
 import { useState, useRef } from 'react';
 import GridBuilder from './GridBuilder.jsx';
 
+// Sample JSON pre-filled in the editor for first-time users
 const SAMPLE_JSON = `{
   "grid": [
     [0, 0, 1],
@@ -14,16 +17,18 @@ const SAMPLE_JSON = `{
 }`;
 
 export default function InputPanel({ onSubmit, onValidate, onNavigateHistory, onNavigateDashboard, error, validationMsg, isRunning }) {
-  const [value, setValue] = useState(SAMPLE_JSON);
-  const [mode, setMode] = useState('json'); // 'json' | 'visual'
-  const fileInputRef = useRef(null);
+  const [value, setValue] = useState(SAMPLE_JSON);  // JSON string in the editor
+  const [mode, setMode] = useState('json');           // Active tab: 'json' | 'upload' | 'visual'
+  const fileInputRef = useRef(null);                  // Hidden file input for upload
 
+  // Clear the JSON editor content
   const handleClear = () => {
     setValue('');
   };
 
-  const [uploadError, setUploadError] = useState(null);
+  const [uploadError, setUploadError] = useState(null); // File upload validation error
 
+  // Handle file selection — only accepts .json files
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;

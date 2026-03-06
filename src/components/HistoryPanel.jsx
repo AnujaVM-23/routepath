@@ -1,9 +1,10 @@
-// PURPOSE: Session-based path history panel
+// PURPOSE: Session-based path history panel — collapsible list of past BFS runs
 // LAYER: UI Component — no algorithm logic
+// Shows grid dimensions, route, steps, status, and timestamp for each entry
 import { useState } from 'react';
 
 export default function HistoryPanel({ history, onClear, loading }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(true); // Toggle panel open/closed
 
   return (
     <div

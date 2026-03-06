@@ -1,5 +1,6 @@
 // PURPOSE: Animated warehouse grid visualization with annotations, tooltips, interactive legend
 // LAYER: UI Component — no algorithm logic
+// Renders the BFS exploration and path animations step-by-step
 import { useState } from 'react';
 
 export default function GridVisualizer({
@@ -12,8 +13,8 @@ export default function GridVisualizer({
   explorationStep,
   pathStep,
 }) {
-  const [tooltip, setTooltip] = useState(null);
-  const [highlightType, setHighlightType] = useState(null);
+  const [tooltip, setTooltip] = useState(null);        // Hover tooltip { text, x, y }
+  const [highlightType, setHighlightType] = useState(null); // Legend filter (dims non-matching cells)
 
   if (!grid || grid.length === 0) {
     return (
@@ -37,7 +38,7 @@ export default function GridVisualizer({
   const rows = grid.length;
   const cols = grid[0].length;
 
-  // Build sets for quick lookup
+  // Build sets for quick O(1) lookup of explored and path cells
   const exploredSet = new Set();
   if (phase === 'exploring' || phase === 'pathing' || phase === 'done') {
     const limit =
@@ -76,6 +77,7 @@ export default function GridVisualizer({
     }
   }
 
+  // Determine cell visual properties (color, icon, animation class) based on state
   const getCellInfo = (r, c) => {
     const key = `${r},${c}`;
     const isStart = start && r === start[0] && c === start[1];
@@ -94,7 +96,7 @@ export default function GridVisualizer({
     return { type: 'walkable', style: { backgroundColor: '#111827' }, className: '', icon: '', iconColor: '' };
   };
 
-  // Directional helper
+  // Directional label helper (used in annotations)
   const getDir = (from, to) => {
     const dr = to[0] - from[0];
     const dc = to[1] - from[1];
@@ -105,7 +107,7 @@ export default function GridVisualizer({
     return '';
   };
 
-  // Live annotation text
+  // Live annotation text — updates during each animation phase
   const annotationText = () => {
     if (phase === 'exploring' && exploredCells && explorationStep > 0) {
       const current = exploredCells[Math.min(explorationStep - 1, exploredCells.length - 1)];
@@ -140,7 +142,7 @@ export default function GridVisualizer({
 
   const annotation = annotationText();
 
-  // Tooltip builder
+  // Tooltip builder — shown on cell hover with type and path step info
   const buildTooltip = (r, c, cellInfo) => {
     const key = `${r},${c}`;
     const typeLabels = {
@@ -155,12 +157,13 @@ export default function GridVisualizer({
     return `[${r},${c}] · ${typeLabels[cellInfo.type] || 'Unknown'}${stepInfo}`;
   };
 
-  // Determine if cell should dim (legend highlight active)
+  // Dim non-matching cells when a legend item is active
   const shouldDim = (cellInfo) => {
     if (!highlightType) return false;
     return cellInfo.type !== highlightType;
   };
 
+  // Legend items for the interactive filter below the grid
   const legendItems = [
     { color: '#6366f1', icon: 'S', label: 'Start', type: 'start' },
     { color: '#f59e0b', icon: '★', label: 'Target', type: 'target' },

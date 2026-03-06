@@ -1,5 +1,6 @@
-// PURPOSE: Validation, target finding, output formatting
+// PURPOSE: Validation, target finding, output formatting, explanation generation
 // LAYER: Utility — zero React, zero UI imports
+// All functions are pure and side-effect free
 
 /**
  * Validate JSON input string for warehouse grid data.
