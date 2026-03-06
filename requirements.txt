@@ -1,0 +1,25 @@
+# RouteMaster — Node.js Dependencies
+# This project uses npm (not pip). Install with: npm install
+#
+# Runtime Dependencies:
+react==18.2.0
+react-dom==18.2.0
+express==4.18.2
+cors==2.8.5
+
+# Dev Dependencies:
+@vitejs/plugin-react==4.2.1
+vite==5.1.4
+tailwindcss==3.4.1
+postcss==8.4.35
+autoprefixer==10.4.17
+
+# System Requirements:
+# - Node.js >= 18.x
+# - npm >= 9.x
+#
+# Install: npm install
+# Dev server: npm run dev
+# Backend: npm run server
+# Build: npm run build
+# Preview: npm run preview
