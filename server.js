@@ -2,9 +2,14 @@
 // LAYER: Backend API — in-memory session store
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
@@ -48,6 +53,12 @@ app.delete('/api/history', (_req, res) => {
   res.json({ message: 'History cleared.' });
 });
 
+// Serve built frontend in production
+app.use(express.static(path.join(__dirname, 'dist')));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 app.listen(PORT, () => {
-  console.log(`RouteMaster API running on http://localhost:${PORT}`);
+  console.log(`RouteMaster running on port ${PORT}`);
 });

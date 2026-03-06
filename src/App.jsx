@@ -9,7 +9,7 @@ import ResultPage from './components/ResultPage.jsx';
 import HistoryPanel from './components/HistoryPanel.jsx';
 import Dashboard from './components/Dashboard.jsx';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 export default function App() {
   // Page: 'dashboard' | 'input' | 'loading' | 'grid' | 'result' | 'history'
